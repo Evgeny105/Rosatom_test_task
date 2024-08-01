@@ -10,6 +10,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import pandas as pd
+from dotenv import load_dotenv
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -21,6 +22,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 # Константы и конфигурация
+load_dotenv()
 GECKODRIVER_PATH = "/usr/local/bin/geckodriver"
 FIREFOX_PATH = "/usr/bin/firefox"
 DOWNLOAD_DIR = os.path.join(os.getcwd(), "data")
