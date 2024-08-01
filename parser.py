@@ -28,9 +28,9 @@ FIREFOX_PATH = "/usr/bin/firefox"
 DOWNLOAD_DIR = os.path.join(os.getcwd(), "data")
 EMAIL = os.getenv("EMAIL")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-RECIPIENT_EMAIL = "gfmnlk@gmail.com"
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
+RECIPIENT_EMAIL = os.getenv("RECIPIENT_EMAIL")
+SMTP_SERVER = os.getenv("SMTP_SERVER")
+SMTP_PORT = os.getenv("SMTP_PORT")
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
