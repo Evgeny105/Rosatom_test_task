@@ -104,195 +104,195 @@ end_date_str = end_date.strftime("%d.%m.%Y")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 # clean_download_dir(DOWNLOAD_DIR)
 
-# # Настройки Firefox
-# firefox_profile = webdriver.FirefoxProfile()
-# firefox_profile.set_preference("browser.download.folderList", 2)
-# firefox_profile.set_preference("browser.download.dir", DOWNLOAD_DIR)
-# firefox_profile.set_preference(
-#     "browser.helperApps.neverAsk.saveToDisk", "application/xml"
-# )
+# Настройки Firefox
+firefox_profile = webdriver.FirefoxProfile()
+firefox_profile.set_preference("browser.download.folderList", 2)
+firefox_profile.set_preference("browser.download.dir", DOWNLOAD_DIR)
+firefox_profile.set_preference(
+    "browser.helperApps.neverAsk.saveToDisk", "application/xml"
+)
 
-# options = Options()
-# options.binary_location = FIREFOX_PATH
-# options.profile = firefox_profile
+options = Options()
+options.binary_location = FIREFOX_PATH
+options.profile = firefox_profile
 
-# service = FirefoxService(executable_path=GECKODRIVER_PATH)
-# driver = webdriver.Firefox(service=service, options=options)
-# driver.get("https://www.moex.com")
+service = FirefoxService(executable_path=GECKODRIVER_PATH)
+driver = webdriver.Firefox(service=service, options=options)
+driver.get("https://www.moex.com")
 
-# time.sleep(2)
+time.sleep(2)
 
-# # Основной процесс парсинга
-# try:
-#     # Закрыть всплывающее окно о cookies, если оно есть
-#     click_to_elem(
-#         (
-#             By.XPATH,
-#             '//span[@class="new-ui-button__label" and text()="Принять"]',
-#         ),
-#         "Не удалось нажать на кнопку 'Принять' о куках",
-#         10,
-#         driver,
-#     )
+# Основной процесс парсинга
+try:
+    # Закрыть всплывающее окно о cookies, если оно есть
+    click_to_elem(
+        (
+            By.XPATH,
+            '//span[@class="new-ui-button__label" and text()="Принять"]',
+        ),
+        "Не удалось нажать на кнопку 'Принять' о куках",
+        10,
+        driver,
+    )
 
-#     # Открыть меню
-#     click_to_elem(
-#         (By.CSS_SELECTOR, ".header__button.header-col.header-col--burger"),
-#         "Не удалось нажать на кнопку 'Меню'",
-#         10,
-#         driver,
-#     )
+    # Открыть меню
+    click_to_elem(
+        (By.CSS_SELECTOR, ".header__button.header-col.header-col--burger"),
+        "Не удалось нажать на кнопку 'Меню'",
+        10,
+        driver,
+    )
 
-#     time.sleep(1)
+    time.sleep(1)
 
-#     # Переход по меню "Срочный рынок"
-#     click_to_elem(
-#         (By.LINK_TEXT, "Срочный рынок"),
-#         "Не удалось нажать на пункт меню 'Срочный рынок'",
-#         10,
-#         driver,
-#     )
+    # Переход по меню "Срочный рынок"
+    click_to_elem(
+        (By.LINK_TEXT, "Срочный рынок"),
+        "Не удалось нажать на пункт меню 'Срочный рынок'",
+        10,
+        driver,
+    )
 
-#     time.sleep(3)
+    time.sleep(3)
 
-#     # Нажатие на кнопку "Согласен" с условиями использования сайта
-#     click_to_elem(
-#         (By.XPATH, '//a[@class="btn2 btn2-primary" and text()="Согласен"]'),
-#         "Не удалось нажать на кнопку 'Согласен'",
-#         10,
-#         driver,
-#     )
+    # Нажатие на кнопку "Согласен" с условиями использования сайта
+    click_to_elem(
+        (By.XPATH, '//a[@class="btn2 btn2-primary" and text()="Согласен"]'),
+        "Не удалось нажать на кнопку 'Согласен'",
+        10,
+        driver,
+    )
 
-#     # Переход по пункту "Индикативные курсы"
-#     click_to_elem(
-#         (By.LINK_TEXT, "Индикативные курсы"),
-#         "Не удалось нажать на пункт меню 'Индикативные курсы'",
-#         10,
-#         driver,
-#     )
+    # Переход по пункту "Индикативные курсы"
+    click_to_elem(
+        (By.LINK_TEXT, "Индикативные курсы"),
+        "Не удалось нажать на пункт меню 'Индикативные курсы'",
+        10,
+        driver,
+    )
 
-#     # Открытие выпадающего списка
-#     click_to_elem(
-#         (By.XPATH, '//div[@class="ui-select__activator -selected"]'),
-#         "Не удалось открыть выпадающий список валют",
-#         10,
-#         driver,
-#     )
+    # Открытие выпадающего списка
+    click_to_elem(
+        (By.XPATH, '//div[@class="ui-select__activator -selected"]'),
+        "Не удалось открыть выпадающий список валют",
+        10,
+        driver,
+    )
 
-#     # Выбор элемента USD/RUB из списка
-#     click_to_elem(
-#         (
-#             By.XPATH,
-#             '//a[contains(text(), "USD/RUB - Доллар США к российскому рублю")]',
-#         ),
-#         "Не удалось выбрать валюту 'USD/RUB'",
-#         10,
-#         driver,
-#     )
+    # Выбор элемента USD/RUB из списка
+    click_to_elem(
+        (
+            By.XPATH,
+            '//a[contains(text(), "USD/RUB - Доллар США к российскому рублю")]',
+        ),
+        "Не удалось выбрать валюту 'USD/RUB'",
+        10,
+        driver,
+    )
 
-#     time.sleep(5)
+    time.sleep(5)
 
-#     # Заполнение поля с начальной датой
-#     send_str(
-#         (By.ID, "fromDate"),
-#         start_date_str,
-#         "Не удалось заполнить поле начальной даты",
-#         10,
-#         driver,
-#     )
+    # Заполнение поля с начальной датой
+    send_str(
+        (By.ID, "fromDate"),
+        start_date_str,
+        "Не удалось заполнить поле начальной даты",
+        10,
+        driver,
+    )
 
-#     # Заполнение поля с конечной датой
-#     send_str(
-#         (By.ID, "tillDate"),
-#         end_date_str,
-#         "Не удалось заполнить поле конечной даты",
-#         10,
-#         driver,
-#     )
+    # Заполнение поля с конечной датой
+    send_str(
+        (By.ID, "tillDate"),
+        end_date_str,
+        "Не удалось заполнить поле конечной даты",
+        10,
+        driver,
+    )
 
-#     # Нажатие на кнопку "Показать"
-#     click_to_elem(
-#         (By.XPATH, '//button[@type="submit" and @aria-label="Показать"]'),
-#         "Не удалось нажать на кнопку 'Показать'",
-#         10,
-#         driver,
-#     )
+    # Нажатие на кнопку "Показать"
+    click_to_elem(
+        (By.XPATH, '//button[@type="submit" and @aria-label="Показать"]'),
+        "Не удалось нажать на кнопку 'Показать'",
+        10,
+        driver,
+    )
 
-#     time.sleep(5)
+    time.sleep(5)
 
-#     # Клик на ссылку для загрузки данных в XML
-#     click_to_elem(
-#         (By.XPATH, '//a[text()="Получить данные в XML"]'),
-#         "Не удалось нажать на ссылку для скачивания XML",
-#         10,
-#         driver,
-#     )
+    # Клик на ссылку для загрузки данных в XML
+    click_to_elem(
+        (By.XPATH, '//a[text()="Получить данные в XML"]'),
+        "Не удалось нажать на ссылку для скачивания XML",
+        10,
+        driver,
+    )
 
-#     time.sleep(10)  # Время ожидания загрузки файла
+    time.sleep(10)  # Время ожидания загрузки файла
 
-#     # Переключение на другую пару валют JPY/RUB
+    # Переключение на другую пару валют JPY/RUB
 
-#     # Открытие выпадающего списка
-#     click_to_elem(
-#         (By.XPATH, '//div[@class="ui-select__activator -selected"]'),
-#         "Не удалось открыть выпадающий список валют",
-#         10,
-#         driver,
-#     )
+    # Открытие выпадающего списка
+    click_to_elem(
+        (By.XPATH, '//div[@class="ui-select__activator -selected"]'),
+        "Не удалось открыть выпадающий список валют",
+        10,
+        driver,
+    )
 
-#     # Выбор элемента JPY/RUB из списка
-#     click_to_elem(
-#         (
-#             By.XPATH,
-#             '//a[contains(text(), "JPY/RUB - Японская йена к российскому рублю")]',
-#         ),
-#         "Не удалось выбрать валюту 'JPY/RUB'",
-#         10,
-#         driver,
-#     )
+    # Выбор элемента JPY/RUB из списка
+    click_to_elem(
+        (
+            By.XPATH,
+            '//a[contains(text(), "JPY/RUB - Японская йена к российскому рублю")]',
+        ),
+        "Не удалось выбрать валюту 'JPY/RUB'",
+        10,
+        driver,
+    )
 
-#     time.sleep(5)
+    time.sleep(5)
 
-#     # Заполнение поля с начальной датой
-#     send_str(
-#         (By.ID, "fromDate"),
-#         start_date_str,
-#         "Не удалось заполнить поле начальной даты",
-#         10,
-#         driver,
-#     )
+    # Заполнение поля с начальной датой
+    send_str(
+        (By.ID, "fromDate"),
+        start_date_str,
+        "Не удалось заполнить поле начальной даты",
+        10,
+        driver,
+    )
 
-#     # Заполнение поля с конечной датой
-#     send_str(
-#         (By.ID, "tillDate"),
-#         end_date_str,
-#         "Не удалось заполнить поле конечной даты",
-#         10,
-#         driver,
-#     )
+    # Заполнение поля с конечной датой
+    send_str(
+        (By.ID, "tillDate"),
+        end_date_str,
+        "Не удалось заполнить поле конечной даты",
+        10,
+        driver,
+    )
 
-#     # Нажатие на кнопку "Показать"
-#     click_to_elem(
-#         (By.XPATH, '//button[@type="submit" and @aria-label="Показать"]'),
-#         "Не удалось нажать на кнопку 'Показать'",
-#         10,
-#         driver,
-#     )
+    # Нажатие на кнопку "Показать"
+    click_to_elem(
+        (By.XPATH, '//button[@type="submit" and @aria-label="Показать"]'),
+        "Не удалось нажать на кнопку 'Показать'",
+        10,
+        driver,
+    )
 
-#     time.sleep(5)
+    time.sleep(5)
 
-#     # Клик на ссылку для загрузки данных в XML
-#     click_to_elem(
-#         (By.XPATH, '//a[text()="Получить данные в XML"]'),
-#         "Не удалось нажать на ссылку для скачивания XML",
-#         10,
-#         driver,
-#     )
+    # Клик на ссылку для загрузки данных в XML
+    click_to_elem(
+        (By.XPATH, '//a[text()="Получить данные в XML"]'),
+        "Не удалось нажать на ссылку для скачивания XML",
+        10,
+        driver,
+    )
 
-#     time.sleep(10)  # Время ожидания загрузки файла
+    time.sleep(10)  # Время ожидания загрузки файла
 
-# finally:
-#     driver.quit()
+finally:
+    driver.quit()
 
 # Парсинг XML и сохранение данных в Excel с помощью pandas
 
