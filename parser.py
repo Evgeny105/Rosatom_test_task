@@ -102,7 +102,7 @@ end_date_str = end_date.strftime("%d.%m.%Y")
 
 # Создание папки для загрузки или очистка существующей
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-# clean_download_dir(DOWNLOAD_DIR)
+clean_download_dir(DOWNLOAD_DIR)
 
 # Настройки Firefox
 firefox_profile = webdriver.FirefoxProfile()
