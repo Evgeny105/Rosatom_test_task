@@ -1,3 +1,4 @@
+import logging
 import os
 import smtplib
 import time
@@ -19,6 +20,20 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+# Константы и конфигурация
+GECKODRIVER_PATH = "/usr/local/bin/geckodriver"
+FIREFOX_PATH = "/usr/bin/firefox"
+DOWNLOAD_DIR = os.path.join(os.getcwd(), "data")
+EMAIL = os.getenv("EMAIL")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+RECIPIENT_EMAIL = "gfmnlk@gmail.com"
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 # Функция для вычисления первой и последней дат предыдущего месяца
 def get_previous_month_dates():
@@ -29,6 +44,21 @@ def get_previous_month_dates():
     return first_day_last_month, last_day_last_month
 
 
+# Функция для очистки папки загрузки от старых файлов
+def clean_download_dir(directory):
+    try:
+        for filename in os.listdir(directory):
+            file_path = os.path.join(directory, filename)
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+                logging.info(f"Удален файл: {file_path}")
+            elif os.path.isdir(file_path):
+                os.rmdir(file_path)
+                logging.info(f"Удалена папка: {file_path}")
+    except Exception as e:
+        logging.error(f"Ошибка очистки папки {directory}\n{e}")
+
+
 # Функция кликающая на элементы
 def click_to_elem(element_id_tuple, err_message, timeout, driver):
     try:
@@ -36,9 +66,8 @@ def click_to_elem(element_id_tuple, err_message, timeout, driver):
             EC.element_to_be_clickable(element_id_tuple)
         )
         elem.click()
-
     except Exception as e:
-        print(f"{err_message}\n{e}")
+        logging.error(f"{err_message}\n{e}")
 
 
 # Функция заполняющая поле ввода
@@ -49,9 +78,8 @@ def send_str(element_id_tuple, string, err_message, timeout, driver):
         )
         input_field.clear()
         input_field.send_keys(string)
-
     except Exception as e:
-        print(f"{err_message}\n{e}")
+        logging.error(f"{err_message}\n{e}")
 
 
 # Функция для парсинга XML и получения данных
@@ -69,227 +97,213 @@ def parse_xml(file_path):
 
 # Получаем даты начала и конца предыдущего месяца
 start_date, end_date = get_previous_month_dates()
-
-# Форматируем даты в формат "дд.мм.гггг"
 start_date_str = start_date.strftime("%d.%m.%Y")
 end_date_str = end_date.strftime("%d.%m.%Y")
 
-# Путь к geckodriver и firefox
-geckodriver_path = "/usr/local/bin/geckodriver"
-firefox_path = "/usr/bin/firefox"
+# Создание папки для загрузки или очистка существующей
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+# clean_download_dir(DOWNLOAD_DIR)
 
-# Настройки Firefox
-options = Options()
-options.binary_location = firefox_path
+# # Настройки Firefox
+# firefox_profile = webdriver.FirefoxProfile()
+# firefox_profile.set_preference("browser.download.folderList", 2)
+# firefox_profile.set_preference("browser.download.dir", DOWNLOAD_DIR)
+# firefox_profile.set_preference(
+#     "browser.helperApps.neverAsk.saveToDisk", "application/xml"
+# )
 
-# Для автоматической загрузки файлов
-download_dir = os.path.join(os.getcwd(), "data")
+# options = Options()
+# options.binary_location = FIREFOX_PATH
+# options.profile = firefox_profile
 
-# Создаем папку data, если она не существует
-os.makedirs(download_dir, exist_ok=True)
+# service = FirefoxService(executable_path=GECKODRIVER_PATH)
+# driver = webdriver.Firefox(service=service, options=options)
+# driver.get("https://www.moex.com")
 
-firefox_profile = webdriver.FirefoxProfile()
-firefox_profile.set_preference(
-    "browser.download.folderList", 2
-)  # 0 - Desktop, 1 - default, 2 - custom
-firefox_profile.set_preference("browser.download.dir", download_dir)
-firefox_profile.set_preference(
-    "browser.helperApps.neverAsk.saveToDisk", "application/xml"
-)  # MIME тип файла
+# time.sleep(2)
 
-options = Options()
-options.binary_location = firefox_path
-options.profile = firefox_profile
+# # Основной процесс парсинга
+# try:
+#     # Закрыть всплывающее окно о cookies, если оно есть
+#     click_to_elem(
+#         (
+#             By.XPATH,
+#             '//span[@class="new-ui-button__label" and text()="Принять"]',
+#         ),
+#         "Не удалось нажать на кнопку 'Принять' о куках",
+#         10,
+#         driver,
+#     )
 
-# Инициализация драйвера Firefox
-service = FirefoxService(executable_path=geckodriver_path)
-driver = webdriver.Firefox(service=service, options=options)
-driver.get("https://www.moex.com")
+#     # Открыть меню
+#     click_to_elem(
+#         (By.CSS_SELECTOR, ".header__button.header-col.header-col--burger"),
+#         "Не удалось нажать на кнопку 'Меню'",
+#         10,
+#         driver,
+#     )
 
-time.sleep(2)  # подобранные на практике к конкретному сайту задержки
+#     time.sleep(1)
 
-try:
-    # Закрыть всплывающее окно о cookies, если оно есть
-    click_to_elem(
-        (
-            By.XPATH,
-            '//span[@class="new-ui-button__label" and text()="Принять"]',
-        ),
-        "Не удалось нажать на кнопку 'Принять' о куках",
-        10,
-        driver,
-    )
+#     # Переход по меню "Срочный рынок"
+#     click_to_elem(
+#         (By.LINK_TEXT, "Срочный рынок"),
+#         "Не удалось нажать на пункт меню 'Срочный рынок'",
+#         10,
+#         driver,
+#     )
 
-    # Открыть меню
-    click_to_elem(
-        (By.CSS_SELECTOR, ".header__button.header-col.header-col--burger"),
-        "Не удалось нажать на кнопку 'Меню'",
-        10,
-        driver,
-    )
+#     time.sleep(3)
 
-    time.sleep(1)
+#     # Нажатие на кнопку "Согласен" с условиями использования сайта
+#     click_to_elem(
+#         (By.XPATH, '//a[@class="btn2 btn2-primary" and text()="Согласен"]'),
+#         "Не удалось нажать на кнопку 'Согласен'",
+#         10,
+#         driver,
+#     )
 
-    # Переход по меню "Срочный рынок"
-    click_to_elem(
-        (By.LINK_TEXT, "Срочный рынок"),
-        "Не удалось нажать на пункт меню 'Срочный рынок'",
-        10,
-        driver,
-    )
+#     # Переход по пункту "Индикативные курсы"
+#     click_to_elem(
+#         (By.LINK_TEXT, "Индикативные курсы"),
+#         "Не удалось нажать на пункт меню 'Индикативные курсы'",
+#         10,
+#         driver,
+#     )
 
-    time.sleep(3)
+#     # Открытие выпадающего списка
+#     click_to_elem(
+#         (By.XPATH, '//div[@class="ui-select__activator -selected"]'),
+#         "Не удалось открыть выпадающий список валют",
+#         10,
+#         driver,
+#     )
 
-    # Нажатие на кнопку "Согласен" с условиями использования сайта
-    click_to_elem(
-        (By.XPATH, '//a[@class="btn2 btn2-primary" and text()="Согласен"]'),
-        "Не удалось нажать на кнопку 'Согласен'",
-        10,
-        driver,
-    )
+#     # Выбор элемента USD/RUB из списка
+#     click_to_elem(
+#         (
+#             By.XPATH,
+#             '//a[contains(text(), "USD/RUB - Доллар США к российскому рублю")]',
+#         ),
+#         "Не удалось выбрать валюту 'USD/RUB'",
+#         10,
+#         driver,
+#     )
 
-    # Переход по пункту "Индикативные курсы"
-    click_to_elem(
-        (By.LINK_TEXT, "Индикативные курсы"),
-        "Не удалось нажать на пункт меню 'Индикативные курсы'",
-        10,
-        driver,
-    )
+#     time.sleep(5)
 
-    # Открытие выпадающего списка
-    click_to_elem(
-        (By.XPATH, '//div[@class="ui-select__activator -selected"]'),
-        "Не удалось открыть выпадающий список валют",
-        10,
-        driver,
-    )
+#     # Заполнение поля с начальной датой
+#     send_str(
+#         (By.ID, "fromDate"),
+#         start_date_str,
+#         "Не удалось заполнить поле начальной даты",
+#         10,
+#         driver,
+#     )
 
-    # Выбор элемента USD/RUB из списка
-    click_to_elem(
-        (
-            By.XPATH,
-            '//a[contains(text(), "USD/RUB - Доллар США к российскому рублю")]',
-        ),
-        "Не удалось выбрать валюту 'USD/RUB'",
-        10,
-        driver,
-    )
+#     # Заполнение поля с конечной датой
+#     send_str(
+#         (By.ID, "tillDate"),
+#         end_date_str,
+#         "Не удалось заполнить поле конечной даты",
+#         10,
+#         driver,
+#     )
 
-    time.sleep(5)
+#     # Нажатие на кнопку "Показать"
+#     click_to_elem(
+#         (By.XPATH, '//button[@type="submit" and @aria-label="Показать"]'),
+#         "Не удалось нажать на кнопку 'Показать'",
+#         10,
+#         driver,
+#     )
 
-    # Заполнение поля с начальной датой
-    send_str(
-        (By.ID, "fromDate"),
-        start_date_str,
-        "Не удалось заполнить поле начальной даты",
-        10,
-        driver,
-    )
+#     time.sleep(5)
 
-    # Заполнение поля с конечной датой
-    send_str(
-        (By.ID, "tillDate"),
-        end_date_str,
-        "Не удалось заполнить поле конечной даты",
-        10,
-        driver,
-    )
+#     # Клик на ссылку для загрузки данных в XML
+#     click_to_elem(
+#         (By.XPATH, '//a[text()="Получить данные в XML"]'),
+#         "Не удалось нажать на ссылку для скачивания XML",
+#         10,
+#         driver,
+#     )
 
-    # Нажатие на кнопку "Показать"
-    click_to_elem(
-        (By.XPATH, '//button[@type="submit" and @aria-label="Показать"]'),
-        "Не удалось нажать на кнопку 'Показать'",
-        10,
-        driver,
-    )
+#     time.sleep(10)  # Время ожидания загрузки файла
 
-    time.sleep(5)
+#     # Переключение на другую пару валют JPY/RUB
 
-    # Клик на ссылку для загрузки данных в XML
-    click_to_elem(
-        (By.XPATH, '//a[text()="Получить данные в XML"]'),
-        "Не удалось нажать на ссылку для скачивания XML",
-        10,
-        driver,
-    )
+#     # Открытие выпадающего списка
+#     click_to_elem(
+#         (By.XPATH, '//div[@class="ui-select__activator -selected"]'),
+#         "Не удалось открыть выпадающий список валют",
+#         10,
+#         driver,
+#     )
 
-    time.sleep(10)  # Время ожидания загрузки файла
+#     # Выбор элемента JPY/RUB из списка
+#     click_to_elem(
+#         (
+#             By.XPATH,
+#             '//a[contains(text(), "JPY/RUB - Японская йена к российскому рублю")]',
+#         ),
+#         "Не удалось выбрать валюту 'JPY/RUB'",
+#         10,
+#         driver,
+#     )
 
-    # Переключение на другую пару валют JPY/RUB
+#     time.sleep(5)
 
-    # Открытие выпадающего списка
-    click_to_elem(
-        (By.XPATH, '//div[@class="ui-select__activator -selected"]'),
-        "Не удалось открыть выпадающий список валют",
-        10,
-        driver,
-    )
+#     # Заполнение поля с начальной датой
+#     send_str(
+#         (By.ID, "fromDate"),
+#         start_date_str,
+#         "Не удалось заполнить поле начальной даты",
+#         10,
+#         driver,
+#     )
 
-    # Выбор элемента JPY/RUB из списка
-    click_to_elem(
-        (
-            By.XPATH,
-            '//a[contains(text(), "JPY/RUB - Японская йена к российскому рублю")]',
-        ),
-        "Не удалось выбрать валюту 'JPY/RUB'",
-        10,
-        driver,
-    )
+#     # Заполнение поля с конечной датой
+#     send_str(
+#         (By.ID, "tillDate"),
+#         end_date_str,
+#         "Не удалось заполнить поле конечной даты",
+#         10,
+#         driver,
+#     )
 
-    time.sleep(5)
+#     # Нажатие на кнопку "Показать"
+#     click_to_elem(
+#         (By.XPATH, '//button[@type="submit" and @aria-label="Показать"]'),
+#         "Не удалось нажать на кнопку 'Показать'",
+#         10,
+#         driver,
+#     )
 
-    # Заполнение поля с начальной датой
-    send_str(
-        (By.ID, "fromDate"),
-        start_date_str,
-        "Не удалось заполнить поле начальной даты",
-        10,
-        driver,
-    )
+#     time.sleep(5)
 
-    # Заполнение поля с конечной датой
-    send_str(
-        (By.ID, "tillDate"),
-        end_date_str,
-        "Не удалось заполнить поле конечной даты",
-        10,
-        driver,
-    )
+#     # Клик на ссылку для загрузки данных в XML
+#     click_to_elem(
+#         (By.XPATH, '//a[text()="Получить данные в XML"]'),
+#         "Не удалось нажать на ссылку для скачивания XML",
+#         10,
+#         driver,
+#     )
 
-    # Нажатие на кнопку "Показать"
-    click_to_elem(
-        (By.XPATH, '//button[@type="submit" and @aria-label="Показать"]'),
-        "Не удалось нажать на кнопку 'Показать'",
-        10,
-        driver,
-    )
+#     time.sleep(10)  # Время ожидания загрузки файла
 
-    time.sleep(5)
-
-    # Клик на ссылку для загрузки данных в XML
-    click_to_elem(
-        (By.XPATH, '//a[text()="Получить данные в XML"]'),
-        "Не удалось нажать на ссылку для скачивания XML",
-        10,
-        driver,
-    )
-
-    time.sleep(10)  # Время ожидания загрузки файла
-
-finally:
-    # Закрытие браузера
-    driver.quit()
+# finally:
+#     driver.quit()
 
 # Парсинг XML и сохранение данных в Excel с помощью pandas
 
-# Найти файлы XML в папке
+# Получение XML-файлов из папки
 usd_rub_file = None
 jpy_rub_file = None
-for file in os.listdir(download_dir):
+for file in os.listdir(DOWNLOAD_DIR):
     if "USD_RUB" in file:
-        usd_rub_file = os.path.join(download_dir, file)
+        usd_rub_file = os.path.join(DOWNLOAD_DIR, file)
     elif "JPY_RUB" in file:
-        jpy_rub_file = os.path.join(download_dir, file)
+        jpy_rub_file = os.path.join(DOWNLOAD_DIR, file)
 
 # Парсинг данных из файлов
 usd_rub_data = parse_xml(usd_rub_file) if usd_rub_file else []
@@ -310,7 +324,7 @@ final_df["Результат"] = (
 ).round(5)
 
 # Запись данных в Excel
-excel_file = os.path.join(download_dir, "report.xlsx")
+excel_file = os.path.join(DOWNLOAD_DIR, "report.xlsx")
 with pd.ExcelWriter(excel_file, engine="openpyxl") as writer:
     final_df.to_excel(writer, index=False)
     workbook = writer.book
@@ -327,13 +341,10 @@ with pd.ExcelWriter(excel_file, engine="openpyxl") as writer:
                     cell.number_format = "#,##0.00 [$₽-419];-#,##0.00 [$₽-419]"
             cell.alignment = Alignment(horizontal="center")
             max_length = max(max_length, len(str(cell.value)))
-
-        # Добавляем небольшой запас для ширины, так как символы не одинаковой ширины
         adjusted_width = (max_length + 2) * 1.2
         worksheet.column_dimensions[column_cells[0].column_letter].width = (
             adjusted_width
         )
-
 
 # Подсчет количества строк
 num_rows = len(final_df)
@@ -351,16 +362,11 @@ else:
         form = "строк"
 
 # Отправка письма с вложением
-email = "gfmnlk@gmail.com"
-password = os.getenv("EMAIL_PASSWORD")
-recipient_email = "gfmnlk@gmail.com"
-subject = "Отчет с курсами валют"
-body = f"Отчет содержит {num_rows} {form}."
-
 msg = MIMEMultipart()
-msg["From"] = email
-msg["To"] = recipient_email
-msg["Subject"] = subject
+msg["From"] = EMAIL
+msg["To"] = RECIPIENT_EMAIL
+msg["Subject"] = "Отчет с курсами валют"
+body = f"Отчет содержит {num_rows} {form}."
 msg.attach(MIMEText(body, "plain"))
 
 with open(excel_file, "rb") as attachment:
@@ -373,8 +379,10 @@ with open(excel_file, "rb") as attachment:
     )
     msg.attach(part)
 
-server = smtplib.SMTP("smtp.gmail.com", 587)
-server.starttls()
-server.login(email, password)
-server.sendmail(email, recipient_email, msg.as_string())
-server.quit()
+try:
+    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        server.starttls()
+        server.login(EMAIL, EMAIL_PASSWORD)
+        server.sendmail(EMAIL, RECIPIENT_EMAIL, msg.as_string())
+except Exception as e:
+    logging.error(f"Не удалось отправить письмо\n{e}")
